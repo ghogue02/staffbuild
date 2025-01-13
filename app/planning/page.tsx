@@ -1,4 +1,5 @@
 // pages/planning.tsx
+"use client"
 import React, { useState } from 'react'
 import { savePhaseData } from '../../utils/savePhasteData'
 

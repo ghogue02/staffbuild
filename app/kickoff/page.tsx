@@ -1,4 +1,5 @@
 // pages/kickoff.tsx
+"use client"
 import React, { useState } from 'react'
 import { savePhaseData } from '../../utils/savePhasteData' // adjust path if needed
 
