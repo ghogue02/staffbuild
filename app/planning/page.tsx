@@ -22,25 +22,32 @@ export default function PlanningPage() {
   const { session, loading: authLoading } = useAuth() // Use the custom hook
 
   useEffect(() => {
-    // Fetch existing data only if authenticated
     async function fetchData() {
+      if (!session) return
+  
       const { data, error } = await supabase
         .from('workbook_responses')
         .select('data')
         .eq('phase', PHASE_NAMES.PLANNING)
-        .eq('user_id', session!.user.id)
-        .single()
-
+        .eq('user_id', session.user.id)
+  
       if (error) {
         console.error('Error fetching data:', error)
         setError('Failed to fetch existing data.')
+        return // Stop further execution if there's an error
       }
-
-      if (data) {
-        setPlanningFormData(data.data)
+  
+      // Check if data exists and is not an empty array
+      if (data && data.length > 0) {
+        // Assuming 'data' is an array of objects, and you want the first object
+        setPlanningFormData(data[0].data)
+      } else {
+        // Handle the case where no data exists (optional)
+        console.log('No existing data found for this phase.')
+        // You might want to set a default state or do nothing
       }
     }
-
+  
     if (session) {
       fetchData()
     }

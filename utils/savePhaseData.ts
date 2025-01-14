@@ -1,14 +1,16 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 
 export async function savePhaseData(phase: string, formData: any) {
   const supabase = createClientComponentClient()
+  const router = useRouter()
 
   const { data: authData, error: authError } = await supabase.auth.getUser()
 
   if (authError || !authData?.user) {
-    // Optionally redirect to login here instead of throwing an error
-    // window.location.href = '/login'
-    throw new Error('Please sign in to save your progress')
+    // Redirect to login instead of throwing an error
+    router.push('/login'); 
+    return; // Stop execution
   }
 
   const { error: saveError } = await supabase

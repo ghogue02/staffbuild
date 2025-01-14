@@ -22,22 +22,25 @@ export default function KickoffPage() {
   const { session, loading: authLoading } = useAuth() // Use the custom hook
 
   useEffect(() => {
-    // Fetch existing data only if authenticated
     async function fetchData() {
+      if (!session) return
+
       const { data, error } = await supabase
         .from('workbook_responses')
         .select('data')
         .eq('phase', PHASE_NAMES.KICKOFF)
-        .eq('user_id', session!.user.id)
-        .single()
+        .eq('user_id', session.user.id)
 
       if (error) {
         console.error('Error fetching data:', error)
         setError('Failed to fetch existing data.')
+        return
       }
 
-      if (data) {
-        setKickoffFormData(data.data)
+      if (data && data.length > 0) {
+        setKickoffFormData(data[0].data)
+      } else {
+        console.log('No existing data found for this phase.')
       }
     }
 
