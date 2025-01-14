@@ -11,9 +11,14 @@ export async function signIn(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  console.log('Attempting sign in with:', { email: data.email })
+
+  const { data: signInData, error } = await supabase.auth.signInWithPassword(data)
+
+  console.log('Sign in response:', { data: signInData, error })
 
   if (error) {
+    console.error('Sign in error:', error)
     return {
       error: error.message
     }
@@ -31,9 +36,14 @@ export async function signUp(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  console.log('Attempting sign up with:', { email: data.email })
+
+  const { data: signUpData, error } = await supabase.auth.signUp(data)
+
+  console.log('Sign up response:', { data: signUpData, error })
 
   if (error) {
+    console.error('Sign up error:', error)
     return {
       error: error.message
     }
