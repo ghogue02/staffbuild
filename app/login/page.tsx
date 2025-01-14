@@ -15,23 +15,32 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    try {
+      const formData = new FormData(e.currentTarget)
+      const email = formData.get('email') as string
+      const password = formData.get('password') as string
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (signInError) {
-      setError(signInError.message)
+      if (signInError) {
+        console.error('Sign in error:', signInError)
+        setError(signInError.message)
+        return
+      }
+
+      if (data?.session) {
+        router.push('/')
+        router.refresh()
+      }
+    } catch (err: any) {
+      console.error('Login error:', err)
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push('/')
-    router.refresh()
   }
 
   return (
