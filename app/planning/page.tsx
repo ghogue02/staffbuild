@@ -7,7 +7,7 @@ import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 
 export default function PlanningPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading as true
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [planningFormData, setPlanningFormData] = useState({
@@ -16,7 +16,6 @@ export default function PlanningPage() {
     keyMilestones: '',
     learningGoals: ''
   });
-  const [isInitialized, setIsInitialized] = useState(false);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -28,10 +27,9 @@ export default function PlanningPage() {
       if (!session) {
         router.push('/login');
       } else {
-        await fetchData();
+        await fetchData(); // Fetch data only after confirming session
+        setLoading(false); // Set loading to false after all initialization is done
       }
-
-      setIsInitialized(true);
     }
 
     async function fetchData() {
@@ -84,7 +82,8 @@ export default function PlanningPage() {
     }
   }
 
-  if (!isInitialized) {
+  // Show loading until initialization is complete
+  if (loading) {
     return <div className="text-white">Loading...</div>;
   }
 

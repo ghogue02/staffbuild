@@ -7,7 +7,7 @@ import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 
 export default function KickoffPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading as true
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [kickoffFormData, setKickoffFormData] = useState({
@@ -16,7 +16,6 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: '',
   });
-  const [isInitialized, setIsInitialized] = useState(false); // Tracks if initialization is complete
   const supabase = createClientComponentClient();
 
   useEffect(() => {
@@ -29,9 +28,8 @@ export default function KickoffPage() {
         router.push('/login');
       } else {
         await fetchData(); // Fetch data only after confirming session
+        setLoading(false); // Set loading to false after all initialization is done
       }
-
-      setIsInitialized(true); // Mark initialization as complete
     }
 
     async function fetchData() {
@@ -49,8 +47,6 @@ export default function KickoffPage() {
 
       if (data && data.length > 0) {
         setKickoffFormData(data[0].data);
-      } else {
-        console.log('No existing data found for this phase.');
       }
     }
 
@@ -85,7 +81,7 @@ export default function KickoffPage() {
   }
 
   // Show loading until initialization is complete
-  if (!isInitialized) {
+  if (loading) {
     return <div className="text-white">Loading...</div>;
   }
 
