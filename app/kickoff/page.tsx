@@ -5,11 +5,7 @@ import { savePhaseData } from '../../utils/savePhaseData'
 import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 
-interface KickoffPageProps {
-  session: Session | null;
-}
-
-export default function KickoffPage({ session: initialSession }: KickoffPageProps) {
+export default function KickoffPage({ session }: { session: Session | null }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +16,7 @@ export default function KickoffPage({ session: initialSession }: KickoffPageProp
     initialIdeas: '',
     projectGoals: '',
   });
-  const [session, setSession] = useState<Session | null>(initialSession);
+
   const supabase = createClientComponentClient();
 
   useEffect(() => {
