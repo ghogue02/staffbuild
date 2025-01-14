@@ -1,16 +1,16 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
 export async function savePhaseData(phase: string, formData: any) {
-  const supabase = createClientComponentClient()
-  const router = useRouter()
+  const supabase = createClientComponentClient();
+  const router = useRouter();
 
-  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError || !authData?.user) {
-    // Redirect to login instead of throwing an error
-    router.push('/login'); 
-    return; // Stop execution
+    // Redirect to login if not authenticated
+    router.push('/login');
+    return;
   }
 
   const { error: saveError } = await supabase
@@ -20,17 +20,17 @@ export async function savePhaseData(phase: string, formData: any) {
         user_id: authData.user.id,
         phase: phase,
         data: formData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       },
       {
-        onConflict: 'user_id,phase'
+        onConflict: 'user_id,phase',
       }
-    )
+    );
 
   if (saveError) {
-    console.error('Save error:', saveError)
-    throw new Error('Failed to save your responses')
+    console.error('Save error:', saveError);
+    throw new Error('Failed to save your responses');
   }
 
-  return { success: true }
+  return { success: true };
 }

@@ -2,62 +2,93 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
-import { useAuth } from '../../utils/useAuth'
 
 export default function PlanningPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const [planningFormData, setPlanningFormData] = useState({
     selectedIdea: '',
     projectOutline: '',
     keyMilestones: '',
     learningGoals: ''
-  })
-  const [isClient, setIsClient] = useState(false);
-  const { isLoading, fetchData } = useAuth();
+  });
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    async function getSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  useEffect(() => {
-    if (isClient && !isLoading) {
-      fetchData(PHASE_NAMES.PLANNING, setPlanningFormData)
+      if (!session) {
+        router.push('/login');
+      } else {
+        setSessionLoaded(true);
+      }
     }
-  }, [isClient, isLoading, fetchData])
+    getSession();
+  }, [router, supabase]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data, error } = await supabase
+        .from('workbook_responses')
+        .select('data')
+        .eq('phase', PHASE_NAMES.PLANNING)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch existing data.');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPlanningFormData(data[0].data);
+      } else {
+        console.log('No existing data found for this phase.');
+      }
+    }
+
+    if (sessionLoaded) {
+      fetchData();
+    }
+  }, [sessionLoaded, supabase]);
 
   const handleChange =
     (field: keyof typeof planningFormData) =>
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setPlanningFormData((prev) => ({
         ...prev,
-        [field]: e.target.value
-      }))
-      setError(null)
-      setSuccess(false)
-    }
+        [field]: e.target.value,
+      }));
+      setError(null);
+      setSuccess(false);
+    };
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setSuccess(false)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
 
     try {
-      await savePhaseData(PHASE_NAMES.PLANNING, planningFormData)
-      setSuccess(true)
+      await savePhaseData(PHASE_NAMES.PLANNING, planningFormData);
+      setSuccess(true);
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  if (!isClient || isLoading) {
-    return <div className="text-white">Loading...</div>
+  if (!sessionLoaded) {
+    return <div className="text-white">Loading...</div>;
   }
 
   return (

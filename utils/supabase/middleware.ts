@@ -17,41 +17,61 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           })
-          response.cookies.set({ name, value, ...options })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
+          request.cookies.delete({
+            name,
+            ...options,
+          })
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
           })
-          response.cookies.set({ name, value: '', ...options })
+          response.cookies.delete({
+            name,
+            ...options,
+          })
         },
       },
     }
   )
 
-  await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  // Check if the user is trying to access the login page
+  if (request.nextUrl.pathname === '/login') {
+    // If there's a session, redirect to the home page
+    if (session) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  } else {
+    // For other pages, if there's no session, redirect to the login page
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+  }
 
   return response
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }

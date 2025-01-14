@@ -1,7 +1,32 @@
-"use client"
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setSessionLoaded(true);
+      } else {
+        router.push('/login');
+      }
+    };
+
+    checkSession();
+  }, [router, supabase]);
+
+  if (!sessionLoaded) {
+    return null;
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-black text-white">
       <h1 className="text-3xl font-bold mb-8">AI Build Day Workbook</h1>

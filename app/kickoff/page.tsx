@@ -2,8 +2,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
-import { useAuth } from '../../utils/useAuth'
 
 export default function KickoffPage() {
   const router = useRouter();
@@ -16,19 +16,49 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: '',
   });
-
-  const [isClient, setIsClient] = useState(false); // Add a state to track client-side
-  const { isLoading, fetchData } = useAuth();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    if (isClient && !isLoading) {
-      fetchData(PHASE_NAMES.KICKOFF, setKickoffFormData);
+    async function getSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push('/login');
+      } else {
+        setSessionLoaded(true);
+      }
     }
-  }, [isClient, isLoading, fetchData]);
+    getSession();
+  }, [router, supabase]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data, error } = await supabase
+        .from('workbook_responses')
+        .select('data')
+        .eq('phase', PHASE_NAMES.KICKOFF)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch existing data.');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setKickoffFormData(data[0].data);
+      } else {
+        console.log('No existing data found for this phase.');
+      }
+    }
+
+    if (sessionLoaded) {
+      fetchData();
+    }
+  }, [sessionLoaded, supabase]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -57,7 +87,7 @@ export default function KickoffPage() {
     }
   }
 
-  if (!isClient || isLoading) {
+  if (!sessionLoaded) {
     return <div className="text-white">Loading...</div>;
   }
 

@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [isSignIn, setIsSignIn] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter()
   const supabase = createClientComponentClient()
 
