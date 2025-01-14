@@ -1,7 +1,7 @@
 // pages/kickoff.tsx
 "use client"
 import React, { useState } from 'react'
-import { savePhaseData } from '../../utils/savePhasteData' // adjust path if needed
+import { savePhaseData } from '../../utils/savePhaseData' // adjust path if needed
 
 export default function KickoffPage() {
   const [loading, setLoading] = useState(false)
