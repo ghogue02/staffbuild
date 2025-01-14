@@ -5,6 +5,7 @@ import { savePhaseData } from '../../utils/savePhaseData'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 import { useAuth } from '../../utils/useAuth'
+import { useSessionContext } from '../../utils/SessionContext'
 
 export default function PlanningPage() {
   const router = useRouter()
@@ -19,7 +20,8 @@ export default function PlanningPage() {
   })
 
   const supabase = createClientComponentClient()
-  const { session, isLoading } = useAuth() // Changed from loading: authLoading
+  const { session } = useSessionContext()
+  const { isLoading } = useAuth()
 
   useEffect(() => {
     async function fetchData() {

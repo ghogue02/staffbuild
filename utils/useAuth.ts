@@ -1,37 +1,29 @@
 // utils/useAuth.ts
-import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useSessionContext } from './SessionContext'; // Import useSessionContext
 
 interface AuthHook {
-  session: Session | null;
-  isLoading: boolean; // Rename loading to isLoading for clarity
+  isLoading: boolean;
   fetchData: (phase: string, setDataCallback: (data: any) => void) => Promise<void>;
 }
 
 export function useAuth(): AuthHook {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { session, isLoading } = useSessionContext(); // Get session from context
   const supabase = createClientComponentClient();
-  const router = useRouter();
 
   const fetchData = useCallback(
     async (phase: string, setDataCallback: (data: any) => void) => {
-      // Wait for the session to be available
-      if (!session) {
-        console.log('No session found in fetchData. Waiting...');
-        return;
-      }
-
+      // No need to check for session here, it's guaranteed by the context
       const { data, error } = await supabase
         .from('workbook_responses')
         .select('data')
         .eq('phase', phase)
-        .eq('user_id', session.user.id);
+        .eq('user_id', session!.user.id); // We can safely use ! here
 
       if (error) {
         console.error('Error fetching data:', error);
-        // Handle the error appropriately (e.g., set an error state)
+        // Handle error appropriately
         return;
       }
 
@@ -44,29 +36,5 @@ export function useAuth(): AuthHook {
     [session, supabase]
   );
 
-  useEffect(() => {
-    async function initializeAuth() {
-      setIsLoading(true); // Ensure isLoading is true initially
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        setSession(session);
-
-        if (!session) {
-          router.push('/login');
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        // Handle error (e.g., redirect to an error page)
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    initializeAuth();
-  }, [supabase, router]);
-
-  return { session, isLoading, fetchData };
+  return { isLoading, fetchData };
 }

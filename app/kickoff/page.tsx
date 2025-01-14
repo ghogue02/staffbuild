@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 import { useAuth } from '../../utils/useAuth'
 
@@ -18,13 +17,13 @@ export default function KickoffPage() {
     projectGoals: '',
   });
 
-  const { session, isLoading, fetchData } = useAuth();
+  const { isLoading, fetchData } = useAuth();
 
   useEffect(() => {
-    if (session && !isLoading) {
+    if (!isLoading) {
       fetchData(PHASE_NAMES.KICKOFF, setKickoffFormData);
     }
-  }, [session, isLoading, fetchData]);
+  }, [isLoading, fetchData]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
