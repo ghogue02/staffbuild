@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
-import { checkAuth } from '@/utils/auth'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function KickoffPage() {
   const router = useRouter()
@@ -16,15 +16,32 @@ export default function KickoffPage() {
     projectGoals: ''
   })
   
+  const supabase = createClientComponentClient()
+
   useEffect(() => {
-    const validateAuth = async () => {
-      const { session, error } = await checkAuth()
-      if (error || !session) {
+    // Fetch existing data when component mounts
+    async function fetchData() {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
         router.push('/login')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('workbook_responses')
+        .select('data')
+        .eq('phase', 'kickoff')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (data) {
+        setFormData(data.data)
       }
     }
-    validateAuth()
-  }, [router])
+
+    fetchData()
+  }, [])
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({
