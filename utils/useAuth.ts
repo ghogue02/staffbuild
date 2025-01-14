@@ -1,28 +1,60 @@
 // utils/useAuth.ts
-import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Session } from '@supabase/supabase-js'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react';
+import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs';
+import { useRouter } from 'next/navigation';
 
-export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
-  const router = useRouter()
+interface AuthHook {
+  session: Session | null;
+  loading: boolean;
+  fetchData: (phase: string, setDataCallback: (data: any) => void) => Promise<void>; // Add fetchData
+}
+
+export function useAuth(): AuthHook {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  const fetchData = useCallback(async (phase: string, setDataCallback: (data: any) => void) => {
+    if (!session) {
+      console.log('No session found in fetchData');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('workbook_responses')
+      .select('data')
+      .eq('phase', phase)
+      .eq('user_id', session.user.id);
+
+    if (error) {
+      console.error('Error fetching data:', error);
+      // Handle the error appropriately, e.g., set an error state
+      return;
+    }
+
+    if (data && data.length > 0) {
+      setDataCallback(data[0].data);
+    } else {
+      console.log('No existing data found for this phase.');
+    }
+  }, [session, supabase]);
 
   useEffect(() => {
     async function getSession() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session === null) {
-        router.push('/login')
-        return
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
+      setLoading(false);
+
+      if (!session) {
+        router.push('/login');
       }
-      setSession(session)
-      setLoading(false)
     }
 
-    getSession()
-  }, [supabase, router])
+    getSession();
+  }, [supabase, router]);
 
-  return { session, loading }
+  return { session, loading, fetchData };
 }

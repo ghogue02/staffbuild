@@ -1,10 +1,10 @@
-"use client";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { savePhaseData } from "../../utils/savePhaseData";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { PHASE_NAMES, PAGE_TITLES } from "../../utils/constants";
-import { useAuth } from "../../utils/useAuth";
+'use client'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
+import { savePhaseData } from '../../utils/savePhaseData'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
+import { useAuth } from '../../utils/useAuth'
 
 export default function KickoffPage() {
   const router = useRouter();
@@ -12,49 +12,19 @@ export default function KickoffPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [kickoffFormData, setKickoffFormData] = useState({
-    leadershipNotes: "",
-    focusAreas: "",
-    initialIdeas: "",
-    projectGoals: "",
+    leadershipNotes: '',
+    focusAreas: '',
+    initialIdeas: '',
+    projectGoals: '',
   });
 
-  const supabase = createClientComponentClient();
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, fetchData } = useAuth(); // Destructure fetchData
 
   useEffect(() => {
-    async function fetchData() {
-      if (!session) {
-        console.log("No session found");
-        return;
-      }
-
-      // Check if data already exists
-      if (Object.values(kickoffFormData).some((value) => value !== "")) {
-        console.log("Data already exists. Skipping fetch.");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("workbook_responses")
-        .select("data")
-        .eq("phase", PHASE_NAMES.KICKOFF)
-        .eq("user_id", session.user.id);
-
-      if (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to fetch existing data.");
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setKickoffFormData(data[0].data);
-      } else {
-        console.log("No existing data found for this phase.");
-      }
+    if (session && !authLoading) {
+      fetchData(PHASE_NAMES.KICKOFF, setKickoffFormData);
     }
-
-    fetchData();
-  }, [session, supabase]);
+  }, [session, authLoading, fetchData]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -108,7 +78,7 @@ export default function KickoffPage() {
             Your responses have been saved successfully!
           </div>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push('/')}
             className="w-full py-4 px-6 text-xl font-medium text-white rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
           >
             Back to Workbook Home
@@ -126,7 +96,7 @@ export default function KickoffPage() {
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What were the main points discussed in the leadership presentation?"
               value={kickoffFormData.leadershipNotes}
-              onChange={handleChange("leadershipNotes")}
+              onChange={handleChange('leadershipNotes')}
             />
           </div>
 
@@ -138,7 +108,7 @@ export default function KickoffPage() {
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What key concepts or focus areas resonated with you from the kickoff?"
               value={kickoffFormData.focusAreas}
-              onChange={handleChange("focusAreas")}
+              onChange={handleChange('focusAreas')}
             />
           </div>
 
@@ -150,7 +120,7 @@ export default function KickoffPage() {
               className="w-full h-48 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What ideas are you considering exploring? What interests you about these ideas? What potential challenges do you foresee?"
               value={kickoffFormData.initialIdeas}
-              onChange={handleChange("initialIdeas")}
+              onChange={handleChange('initialIdeas')}
             />
           </div>
 
@@ -162,7 +132,7 @@ export default function KickoffPage() {
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What do you hope to achieve by the end of today's build session?"
               value={kickoffFormData.projectGoals}
-              onChange={handleChange("projectGoals")}
+              onChange={handleChange('projectGoals')}
             />
           </div>
         </div>
@@ -173,14 +143,14 @@ export default function KickoffPage() {
             disabled={loading}
             className={`w-full py-4 px-6 text-xl font-medium text-white rounded-lg transition-colors ${
               loading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500'
             }`}
           >
-            {loading ? "Saving..." : "Save Kickoff Data"}
+            {loading ? 'Saving...' : 'Save Kickoff Data'}
           </button>
         </div>
       </form>
     </div>
-  );
+  )
 }
