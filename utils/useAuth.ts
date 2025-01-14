@@ -13,12 +13,12 @@ export function useAuth() {
   useEffect(() => {
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession()
+      if (session === null) {
+        router.push('/login')
+        return
+      }
       setSession(session)
       setLoading(false)
-
-      if (!session) {
-        router.push('/login')
-      }
     }
 
     getSession()

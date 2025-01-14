@@ -19,11 +19,13 @@ export default function KickoffPage() {
   })
 
   const supabase = createClientComponentClient()
-  const { session, loading: authLoading } = useAuth() // Use the custom hook
+  const { session, loading: authLoading } = useAuth()
 
   useEffect(() => {
     async function fetchData() {
-      if (!session) return
+      if (!session?.user?.id) {
+        return
+      }
 
       const { data, error } = await supabase
         .from('workbook_responses')
@@ -76,7 +78,6 @@ export default function KickoffPage() {
     }
   }
 
-  // Show loading state while checking for authentication
   if (authLoading) {
     return <div className="text-white">Loading...</div>
   }
@@ -112,7 +113,6 @@ export default function KickoffPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-6">
-          {/* Form fields remain the same */}
           <div className="form-group">
             <label className="block text-xl font-medium text-white mb-3">
               Key notes from leadership talk:
