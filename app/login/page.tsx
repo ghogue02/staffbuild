@@ -2,7 +2,6 @@
 import Link from "next/link"
 import { SubmitButton } from "./submit-button"
 import { signIn, signUp } from "./actions"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from "next/navigation"
 
 export default function Login({ searchParams }: { searchParams: { message: string } }) {
@@ -10,29 +9,21 @@ export default function Login({ searchParams }: { searchParams: { message: strin
 
   async function handleSignIn(formData: FormData) {
     try {
-      const result = await signIn(formData)
-      if (result?.error) {
-        throw new Error(result.error)
-      }
+      await signIn(formData)
       router.push('/')
       router.refresh()
     } catch (error: any) {
       console.error('Sign in error:', error)
-      // Error will be shown via searchParams.message
     }
   }
 
   async function handleSignUp(formData: FormData) {
     try {
-      const result = await signUp(formData)
-      if (result?.error) {
-        throw new Error(result.error)
-      }
+      await signUp(formData)
       router.push('/')
       router.refresh()
     } catch (error: any) {
       console.error('Sign up error:', error)
-      // Error will be shown via searchParams.message
     }
   }
 
@@ -84,14 +75,14 @@ export default function Login({ searchParams }: { searchParams: { message: strin
           minLength={6}
         />
         <SubmitButton
-          formAction={handleSignIn}
+          formAction={signIn}
           className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing In..."
         >
           Sign In
         </SubmitButton>
         <SubmitButton
-          formAction={handleSignUp}
+          formAction={signUp}
           className="border border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing Up..."
         >
