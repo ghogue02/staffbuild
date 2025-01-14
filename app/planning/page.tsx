@@ -19,7 +19,7 @@ export default function PlanningPage() {
   })
 
   const supabase = createClientComponentClient()
-  const { session, loading: authLoading } = useAuth() // Use the custom hook
+  const { session, isLoading } = useAuth() // Changed from loading: authLoading
 
   useEffect(() => {
     async function fetchData() {
@@ -81,7 +81,7 @@ export default function PlanningPage() {
   }
 
   // Show loading state while checking for authentication
-  if (authLoading) {
+  if (isLoading) {
     return <div className="text-white">Loading...</div>
   }
 

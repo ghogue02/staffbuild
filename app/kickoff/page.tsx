@@ -18,13 +18,13 @@ export default function KickoffPage() {
     projectGoals: '',
   });
 
-  const { session, loading: authLoading, fetchData } = useAuth(); // Destructure fetchData
+  const { session, isLoading, fetchData } = useAuth();
 
   useEffect(() => {
-    if (session && !authLoading) {
+    if (session && !isLoading) {
       fetchData(PHASE_NAMES.KICKOFF, setKickoffFormData);
     }
-  }, [session, authLoading, fetchData]);
+  }, [session, isLoading, fetchData]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -53,7 +53,7 @@ export default function KickoffPage() {
     }
   }
 
-  if (authLoading) {
+  if (isLoading) {
     return <div className="text-white">Loading...</div>;
   }
 

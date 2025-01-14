@@ -5,56 +5,68 @@ import { useRouter } from 'next/navigation';
 
 interface AuthHook {
   session: Session | null;
-  loading: boolean;
-  fetchData: (phase: string, setDataCallback: (data: any) => void) => Promise<void>; // Add fetchData
+  isLoading: boolean; // Rename loading to isLoading for clarity
+  fetchData: (phase: string, setDataCallback: (data: any) => void) => Promise<void>;
 }
 
 export function useAuth(): AuthHook {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const supabase = createClientComponentClient();
   const router = useRouter();
 
-  const fetchData = useCallback(async (phase: string, setDataCallback: (data: any) => void) => {
-    if (!session) {
-      console.log('No session found in fetchData');
-      return;
-    }
+  const fetchData = useCallback(
+    async (phase: string, setDataCallback: (data: any) => void) => {
+      // Wait for the session to be available
+      if (!session) {
+        console.log('No session found in fetchData. Waiting...');
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from('workbook_responses')
-      .select('data')
-      .eq('phase', phase)
-      .eq('user_id', session.user.id);
+      const { data, error } = await supabase
+        .from('workbook_responses')
+        .select('data')
+        .eq('phase', phase)
+        .eq('user_id', session.user.id);
 
-    if (error) {
-      console.error('Error fetching data:', error);
-      // Handle the error appropriately, e.g., set an error state
-      return;
-    }
+      if (error) {
+        console.error('Error fetching data:', error);
+        // Handle the error appropriately (e.g., set an error state)
+        return;
+      }
 
-    if (data && data.length > 0) {
-      setDataCallback(data[0].data);
-    } else {
-      console.log('No existing data found for this phase.');
-    }
-  }, [session, supabase]);
+      if (data && data.length > 0) {
+        setDataCallback(data[0].data);
+      } else {
+        console.log('No existing data found for this phase.');
+      }
+    },
+    [session, supabase]
+  );
 
   useEffect(() => {
-    async function getSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
+    async function initializeAuth() {
+      setIsLoading(true); // Ensure isLoading is true initially
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      if (!session) {
-        router.push('/login');
+        setSession(session);
+
+        if (!session) {
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        // Handle error (e.g., redirect to an error page)
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    getSession();
+    initializeAuth();
   }, [supabase, router]);
 
-  return { session, loading, fetchData };
+  return { session, isLoading, fetchData };
 }
