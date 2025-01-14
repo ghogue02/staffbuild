@@ -3,26 +3,38 @@ import Link from "next/link"
 import { SubmitButton } from "./submit-button"
 import { signIn, signUp } from "./actions"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function Login({ searchParams }: { searchParams: { message: string } }) {
   const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleSignIn(formData: FormData) {
+  const handleSignIn = async (formData: FormData) => {
     try {
-      await signIn(formData)
+      const result = await signIn(formData)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
       router.push('/')
       router.refresh()
     } catch (error: any) {
+      setError('An unexpected error occurred')
       console.error('Sign in error:', error)
     }
   }
 
-  async function handleSignUp(formData: FormData) {
+  const handleSignUp = async (formData: FormData) => {
     try {
-      await signUp(formData)
+      const result = await signUp(formData)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
       router.push('/')
       router.refresh()
     } catch (error: any) {
+      setError('An unexpected error occurred')
       console.error('Sign up error:', error)
     }
   }
@@ -50,7 +62,15 @@ export default function Login({ searchParams }: { searchParams: { message: strin
         Back
       </Link>
 
-      <form className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground">
+      <form
+        className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground"
+      >
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
         <label className="text-md" htmlFor="email">
           Email
         </label>
@@ -75,14 +95,14 @@ export default function Login({ searchParams }: { searchParams: { message: strin
           minLength={6}
         />
         <SubmitButton
-          formAction={signIn}
+          formAction={handleSignIn}
           className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing In..."
         >
           Sign In
         </SubmitButton>
         <SubmitButton
-          formAction={signUp}
+          formAction={handleSignUp}
           className="border border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing Up..."
         >

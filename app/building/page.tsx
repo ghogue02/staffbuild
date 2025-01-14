@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react'
-import { savePhaseData } from '../../utils/savePhasteData'
+import { savePhaseData } from '../../utils/savePhaseData'
 
 export default function BuildingPage() {
   const [loading, setLoading] = useState(false)
