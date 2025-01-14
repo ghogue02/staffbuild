@@ -16,11 +16,11 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: '',
   });
-  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if user is logged in
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function getSession() {
+    async function initializeSession() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -28,10 +28,10 @@ export default function KickoffPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setSessionLoaded(true);
+        setIsLoggedIn(true); // Set logged in state to true
       }
     }
-    getSession();
+    initializeSession();
   }, [router, supabase]);
 
   useEffect(() => {
@@ -55,10 +55,10 @@ export default function KickoffPage() {
       }
     }
 
-    if (sessionLoaded) {
+    if (isLoggedIn) {
       fetchData();
     }
-  }, [sessionLoaded, supabase]);
+  }, [isLoggedIn, supabase]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -87,8 +87,9 @@ export default function KickoffPage() {
     }
   }
 
-  if (!sessionLoaded) {
-    return <div className="text-white">Loading...</div>;
+  // Only render the component if the user is logged in
+  if (!isLoggedIn) {
+    return null;
   }
 
   return (

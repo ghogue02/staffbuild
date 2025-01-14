@@ -16,11 +16,11 @@ export default function PlanningPage() {
     keyMilestones: '',
     learningGoals: ''
   });
-  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function getSession() {
+    async function initializeSession() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -28,10 +28,10 @@ export default function PlanningPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setSessionLoaded(true);
+        setIsLoggedIn(true);
       }
     }
-    getSession();
+    initializeSession();
   }, [router, supabase]);
 
   useEffect(() => {
@@ -55,10 +55,10 @@ export default function PlanningPage() {
       }
     }
 
-    if (sessionLoaded) {
+    if (isLoggedIn) {
       fetchData();
     }
-  }, [sessionLoaded, supabase]);
+  }, [isLoggedIn, supabase]);
 
   const handleChange =
     (field: keyof typeof planningFormData) =>
@@ -87,8 +87,8 @@ export default function PlanningPage() {
     }
   }
 
-  if (!sessionLoaded) {
-    return <div className="text-white">Loading...</div>;
+  if (!isLoggedIn) {
+    return null;
   }
 
   return (
