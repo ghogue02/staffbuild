@@ -26,18 +26,13 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        console.error('Sign in error:', signInError)
         setError(signInError.message)
         return
       }
 
-      if (data?.session) {
-        router.push('/')
-        router.refresh()
-      }
-    } catch (err: any) {
-      console.error('Login error:', err)
-      setError('An unexpected error occurred. Please try again.')
+      router.replace('/')
+    } catch (err) {
+      setError('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
