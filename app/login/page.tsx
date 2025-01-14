@@ -2,11 +2,9 @@
 import Link from "next/link"
 import { SubmitButton } from "./submit-button"
 import { signIn, signUp } from "./actions"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 export default function Login({ searchParams }: { searchParams: { message: string } }) {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -22,12 +20,7 @@ export default function Login({ searchParams }: { searchParams: { message: strin
       if (result?.error) {
         console.log('Error during sign in:', result.error)
         setError(result.error)
-        return
       }
-      
-      console.log('Sign in successful, redirecting...')
-      router.push('/')
-      router.refresh()
     } catch (error: any) {
       console.error('Unexpected error during sign in:', error)
       setError(error?.message || 'An unexpected error occurred')
@@ -44,10 +37,7 @@ export default function Login({ searchParams }: { searchParams: { message: strin
       const result = await signUp(formData)
       if (result?.error) {
         setError(result.error)
-        return
       }
-      router.push('/')
-      router.refresh()
     } catch (error: any) {
       setError(error?.message || 'An unexpected error occurred')
     } finally {
