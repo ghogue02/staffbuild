@@ -8,34 +8,50 @@ import { useState } from "react"
 export default function Login({ searchParams }: { searchParams: { message: string } }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleSignIn = async (formData: FormData) => {
+    setLoading(true)
+    setError(null)
+    
     try {
+      console.log('Starting sign in process...')
       const result = await signIn(formData)
-      if (result.error) {
+      console.log('Sign in result:', result)
+      
+      if (result?.error) {
+        console.log('Error during sign in:', result.error)
         setError(result.error)
         return
       }
+      
+      console.log('Sign in successful, redirecting...')
       router.push('/')
       router.refresh()
     } catch (error: any) {
-      setError('An unexpected error occurred')
-      console.error('Sign in error:', error)
+      console.error('Unexpected error during sign in:', error)
+      setError(error?.message || 'An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleSignUp = async (formData: FormData) => {
+    setLoading(true)
+    setError(null)
+
     try {
       const result = await signUp(formData)
-      if (result.error) {
+      if (result?.error) {
         setError(result.error)
         return
       }
       router.push('/')
       router.refresh()
     } catch (error: any) {
-      setError('An unexpected error occurred')
-      console.error('Sign up error:', error)
+      setError(error?.message || 'An unexpected error occurred')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -98,15 +114,17 @@ export default function Login({ searchParams }: { searchParams: { message: strin
           formAction={handleSignIn}
           className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing In..."
+          disabled={loading}
         >
-          Sign In
+          {loading ? 'Signing In...' : 'Sign In'}
         </SubmitButton>
         <SubmitButton
           formAction={handleSignUp}
           className="border border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
           pendingText="Signing Up..."
+          disabled={loading}
         >
-          Sign Up
+          {loading ? 'Signing Up...' : 'Sign Up'}
         </SubmitButton>
         {searchParams?.message && (
           <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">

@@ -4,51 +4,54 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 
 export async function signIn(formData: FormData) {
-  const supabase = await createClient()
+  try {
+    console.log('Server: Creating Supabase client...')
+    const supabase = await createClient()
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
-
-  console.log('Attempting sign in with:', { email: data.email })
-
-  const { data: signInData, error } = await supabase.auth.signInWithPassword(data)
-
-  console.log('Sign in response:', { data: signInData, error })
-
-  if (error) {
-    console.error('Sign in error:', error)
-    return {
-      error: error.message
+    const data = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
     }
-  }
 
-  revalidatePath('/', 'layout')
-  return { error: null }
+    console.log('Server: Attempting sign in...')
+    const { data: signInData, error } = await supabase.auth.signInWithPassword(data)
+
+    if (error) {
+      console.error('Server: Sign in error:', error)
+      return { error: error.message }
+    }
+
+    console.log('Server: Sign in successful:', signInData)
+    revalidatePath('/', 'layout')
+    return { error: null }
+  } catch (error) {
+    console.error('Server: Unexpected error:', error)
+    return { error: 'An unexpected error occurred' }
+  }
 }
 
 export async function signUp(formData: FormData) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
-
-  console.log('Attempting sign up with:', { email: data.email })
-
-  const { data: signUpData, error } = await supabase.auth.signUp(data)
-
-  console.log('Sign up response:', { data: signUpData, error })
-
-  if (error) {
-    console.error('Sign up error:', error)
-    return {
-      error: error.message
+    const data = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
     }
-  }
 
-  revalidatePath('/', 'layout')
-  return { error: null }
+    console.log('Server: Attempting sign up...')
+    const { data: signUpData, error } = await supabase.auth.signUp(data)
+
+    if (error) {
+      console.error('Server: Sign up error:', error)
+      return { error: error.message }
+    }
+
+    console.log('Server: Sign up successful:', signUpData)
+    revalidatePath('/', 'layout')
+    return { error: null }
+  } catch (error) {
+    console.error('Server: Unexpected error:', error)
+    return { error: 'An unexpected error occurred' }
+  }
 }
