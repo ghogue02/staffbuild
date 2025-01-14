@@ -2,10 +2,8 @@
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
 import { useAuth } from '../../utils/useAuth'
-import { useSessionContext } from '../../utils/SessionContext'
 
 export default function PlanningPage() {
   const router = useRouter()
@@ -18,42 +16,18 @@ export default function PlanningPage() {
     keyMilestones: '',
     learningGoals: ''
   })
-
-  const supabase = createClientComponentClient()
-  const { session } = useSessionContext()
-  const { isLoading } = useAuth()
+  const [isClient, setIsClient] = useState(false);
+  const { isLoading, fetchData } = useAuth();
 
   useEffect(() => {
-    async function fetchData() {
-      if (!session) return
-  
-      const { data, error } = await supabase
-        .from('workbook_responses')
-        .select('data')
-        .eq('phase', PHASE_NAMES.PLANNING)
-        .eq('user_id', session.user.id)
-  
-      if (error) {
-        console.error('Error fetching data:', error)
-        setError('Failed to fetch existing data.')
-        return // Stop further execution if there's an error
-      }
-  
-      // Check if data exists and is not an empty array
-      if (data && data.length > 0) {
-        // Assuming 'data' is an array of objects, and you want the first object
-        setPlanningFormData(data[0].data)
-      } else {
-        // Handle the case where no data exists (optional)
-        console.log('No existing data found for this phase.')
-        // You might want to set a default state or do nothing
-      }
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !isLoading) {
+      fetchData(PHASE_NAMES.PLANNING, setPlanningFormData)
     }
-  
-    if (session) {
-      fetchData()
-    }
-  }, [session, supabase])
+  }, [isClient, isLoading, fetchData])
 
   const handleChange =
     (field: keyof typeof planningFormData) =>
@@ -82,8 +56,7 @@ export default function PlanningPage() {
     }
   }
 
-  // Show loading state while checking for authentication
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return <div className="text-white">Loading...</div>
   }
 

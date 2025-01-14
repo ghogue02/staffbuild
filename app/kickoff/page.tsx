@@ -17,13 +17,18 @@ export default function KickoffPage() {
     projectGoals: '',
   });
 
+  const [isClient, setIsClient] = useState(false); // Add a state to track client-side
   const { isLoading, fetchData } = useAuth();
 
   useEffect(() => {
-    if (!isLoading) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !isLoading) {
       fetchData(PHASE_NAMES.KICKOFF, setKickoffFormData);
     }
-  }, [isLoading, fetchData]);
+  }, [isClient, isLoading, fetchData]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -52,7 +57,7 @@ export default function KickoffPage() {
     }
   }
 
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return <div className="text-white">Loading...</div>;
   }
 
