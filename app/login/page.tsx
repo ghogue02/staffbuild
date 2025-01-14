@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 export default function LoginPage() {
+  const [isSignIn, setIsSignIn] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -20,17 +22,34 @@ export default function LoginPage() {
       const email = formData.get('email') as string
       const password = formData.get('password') as string
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      if (isSignIn) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
 
-      if (signInError) {
-        setError(signInError.message)
-        return
+        if (signInError) {
+          setError(signInError.message)
+          return
+        }
+
+        router.replace('/')
+      } else {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${location.origin}/auth/callback`,
+          },
+        })
+
+        if (signUpError) {
+          setError(signUpError.message)
+          return
+        }
+
+        setSuccess('Check your email to confirm your account.')
       }
-
-      router.replace('/')
     } catch (err) {
       setError('An unexpected error occurred')
     } finally {
@@ -45,6 +64,11 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-500/10 text-red-500 p-3 rounded-md text-sm">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-500/10 text-green-500 p-3 rounded-md text-sm">
+              {success}
             </div>
           )}
           <div>
@@ -75,13 +99,22 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             className={`w-full py-3 px-4 rounded-md text-white text-lg font-medium transition ${
-              loading 
+              loading
                 ? 'bg-gray-600 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700'
             }`}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (isSignIn ? 'Signing in...' : 'Signing up...') : isSignIn ? 'Sign In' : 'Sign Up'}
           </button>
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setIsSignIn(!isSignIn)}
+              className="text-white hover:underline"
+            >
+              {isSignIn ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

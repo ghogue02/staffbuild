@@ -3,13 +3,15 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
+import { useAuth } from '../../utils/useAuth'
 
 export default function KickoffPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [formData, setFormData] = useState({
+  const [kickoffFormData, setKickoffFormData] = useState({
     leadershipNotes: '',
     focusAreas: '',
     initialIdeas: '',
@@ -17,38 +19,37 @@ export default function KickoffPage() {
   })
 
   const supabase = createClientComponentClient()
+  const { session, loading: authLoading } = useAuth() // Use the custom hook
 
   useEffect(() => {
-    // Fetch existing data on mount
+    // Fetch existing data only if authenticated
     async function fetchData() {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession()
-
-      if (!session) {
-        router.push('/login')
-        return
-      }
-
       const { data, error } = await supabase
         .from('workbook_responses')
         .select('data')
-        .eq('phase', 'kickoff')
-        .eq('user_id', session.user.id)
+        .eq('phase', PHASE_NAMES.KICKOFF)
+        .eq('user_id', session!.user.id)
         .single()
 
+      if (error) {
+        console.error('Error fetching data:', error)
+        setError('Failed to fetch existing data.')
+      }
+
       if (data) {
-        setFormData(data.data)
+        setKickoffFormData(data.data)
       }
     }
 
-    fetchData()
-  }, [supabase, router])
+    if (session) {
+      fetchData()
+    }
+  }, [session, supabase])
 
   const handleChange =
-    (field: keyof typeof formData) =>
+    (field: keyof typeof kickoffFormData) =>
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setFormData((prev) => ({
+      setKickoffFormData((prev) => ({
         ...prev,
         [field]: e.target.value
       }))
@@ -63,7 +64,7 @@ export default function KickoffPage() {
     setSuccess(false)
 
     try {
-      await savePhaseData('kickoff', formData)
+      await savePhaseData(PHASE_NAMES.KICKOFF, kickoffFormData)
       setSuccess(true)
     } catch (err: any) {
       setError(err.message)
@@ -72,10 +73,17 @@ export default function KickoffPage() {
     }
   }
 
+  // Show loading state while checking for authentication
+  if (authLoading) {
+    return <div className="text-white">Loading...</div>
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">Kickoff Phase</h1>
+        <h1 className="text-4xl font-bold text-white mb-2">
+          {PAGE_TITLES[PHASE_NAMES.KICKOFF]} Phase
+        </h1>
         <p className="text-xl text-gray-300">Time: 10:00am - 11:00am</p>
       </div>
 
@@ -101,6 +109,7 @@ export default function KickoffPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="space-y-6">
+          {/* Form fields remain the same */}
           <div className="form-group">
             <label className="block text-xl font-medium text-white mb-3">
               Key notes from leadership talk:
@@ -108,7 +117,7 @@ export default function KickoffPage() {
             <textarea
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What were the main points discussed in the leadership presentation?"
-              value={formData.leadershipNotes}
+              value={kickoffFormData.leadershipNotes}
               onChange={handleChange('leadershipNotes')}
             />
           </div>
@@ -120,7 +129,7 @@ export default function KickoffPage() {
             <textarea
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What key concepts or focus areas resonated with you from the kickoff?"
-              value={formData.focusAreas}
+              value={kickoffFormData.focusAreas}
               onChange={handleChange('focusAreas')}
             />
           </div>
@@ -132,7 +141,7 @@ export default function KickoffPage() {
             <textarea
               className="w-full h-48 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What ideas are you considering exploring? What interests you about these ideas? What potential challenges do you foresee?"
-              value={formData.initialIdeas}
+              value={kickoffFormData.initialIdeas}
               onChange={handleChange('initialIdeas')}
             />
           </div>
@@ -144,7 +153,7 @@ export default function KickoffPage() {
             <textarea
               className="w-full h-32 px-4 py-3 text-lg text-gray-900 placeholder-gray-500 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               placeholder="What do you hope to achieve by the end of today's build session?"
-              value={formData.projectGoals}
+              value={kickoffFormData.projectGoals}
               onChange={handleChange('projectGoals')}
             />
           </div>

@@ -6,20 +6,24 @@ export async function savePhaseData(phase: string, formData: any) {
   const { data: authData, error: authError } = await supabase.auth.getUser()
 
   if (authError || !authData?.user) {
-    window.location.href = '/login'
+    // Optionally redirect to login here instead of throwing an error
+    // window.location.href = '/login'
     throw new Error('Please sign in to save your progress')
   }
 
   const { error: saveError } = await supabase
     .from('workbook_responses')
-    .upsert({
-      user_id: authData.user.id,
-      phase: phase,
-      data: formData,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id,phase'
-    })
+    .upsert(
+      {
+        user_id: authData.user.id,
+        phase: phase,
+        data: formData,
+        updated_at: new Date().toISOString()
+      },
+      {
+        onConflict: 'user_id,phase'
+      }
+    )
 
   if (saveError) {
     console.error('Save error:', saveError)
