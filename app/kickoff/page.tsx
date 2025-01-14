@@ -1,8 +1,11 @@
 "use client"
-import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
+import { checkAuth } from '@/utils/auth'
 
 export default function KickoffPage() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -12,6 +15,16 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: ''
   })
+  
+  useEffect(() => {
+    const validateAuth = async () => {
+      const { session, error } = await checkAuth()
+      if (error || !session) {
+        router.push('/login')
+      }
+    }
+    validateAuth()
+  }, [router])
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({
