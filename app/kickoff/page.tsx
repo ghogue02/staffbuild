@@ -1,4 +1,4 @@
-"use client"
+'use client'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
@@ -15,14 +15,16 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: ''
   })
-  
+
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    // Fetch existing data when component mounts
+    // Fetch existing data on mount
     async function fetchData() {
-      const { data: { session } } = await supabase.auth.getSession()
-      
+      const {
+        data: { session }
+      } = await supabase.auth.getSession()
+
       if (!session) {
         router.push('/login')
         return
@@ -41,16 +43,18 @@ export default function KickoffPage() {
     }
 
     fetchData()
-  }, [])
+  }, [supabase, router])
 
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }))
-    setError(null)
-    setSuccess(false)
-  }
+  const handleChange =
+    (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: e.target.value
+      }))
+      setError(null)
+      setSuccess(false)
+    }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -82,8 +86,16 @@ export default function KickoffPage() {
       )}
 
       {success && (
-        <div className="mb-6 p-4 bg-green-500/20 border border-green-500 rounded-lg text-green-100">
-          Your responses have been saved successfully!
+        <div className="mb-6">
+          <div className="p-4 bg-green-500/20 border border-green-500 rounded-lg text-green-100 mb-4">
+            Your responses have been saved successfully!
+          </div>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full py-4 px-6 text-xl font-medium text-white rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors"
+          >
+            Back to Workbook Home
+          </button>
         </div>
       )}
 
@@ -143,7 +155,7 @@ export default function KickoffPage() {
             type="submit"
             disabled={loading}
             className={`w-full py-4 px-6 text-xl font-medium text-white rounded-lg transition-colors ${
-              loading 
+              loading
                 ? 'bg-gray-500 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500'
             }`}
