@@ -16,11 +16,11 @@ export default function KickoffPage() {
     initialIdeas: '',
     projectGoals: '',
   });
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if user is logged in
+  const [isInitialized, setIsInitialized] = useState(false); // Tracks if initialization is complete
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function initializeSession() {
+    async function initialize() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -28,13 +28,12 @@ export default function KickoffPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setIsLoggedIn(true); // Set logged in state to true
+        await fetchData(); // Fetch data only after confirming session
       }
-    }
-    initializeSession();
-  }, [router, supabase]);
 
-  useEffect(() => {
+      setIsInitialized(true); // Mark initialization as complete
+    }
+
     async function fetchData() {
       const { data, error } = await supabase
         .from('workbook_responses')
@@ -55,10 +54,8 @@ export default function KickoffPage() {
       }
     }
 
-    if (isLoggedIn) {
-      fetchData();
-    }
-  }, [isLoggedIn, supabase]);
+    initialize();
+  }, [router, supabase]);
 
   const handleChange =
     (field: keyof typeof kickoffFormData) =>
@@ -87,9 +84,9 @@ export default function KickoffPage() {
     }
   }
 
-  // Only render the component if the user is logged in
-  if (!isLoggedIn) {
-    return null;
+  // Show loading until initialization is complete
+  if (!isInitialized) {
+    return <div className="text-white">Loading...</div>;
   }
 
   return (

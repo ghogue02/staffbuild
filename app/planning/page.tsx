@@ -16,11 +16,11 @@ export default function PlanningPage() {
     keyMilestones: '',
     learningGoals: ''
   });
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    async function initializeSession() {
+    async function initialize() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -28,13 +28,12 @@ export default function PlanningPage() {
       if (!session) {
         router.push('/login');
       } else {
-        setIsLoggedIn(true);
+        await fetchData();
       }
-    }
-    initializeSession();
-  }, [router, supabase]);
 
-  useEffect(() => {
+      setIsInitialized(true);
+    }
+
     async function fetchData() {
       const { data, error } = await supabase
         .from('workbook_responses')
@@ -55,10 +54,8 @@ export default function PlanningPage() {
       }
     }
 
-    if (isLoggedIn) {
-      fetchData();
-    }
-  }, [isLoggedIn, supabase]);
+    initialize();
+  }, [router, supabase]);
 
   const handleChange =
     (field: keyof typeof planningFormData) =>
@@ -87,8 +84,8 @@ export default function PlanningPage() {
     }
   }
 
-  if (!isLoggedIn) {
-    return null;
+  if (!isInitialized) {
+    return <div className="text-white">Loading...</div>;
   }
 
   return (
