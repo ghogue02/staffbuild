@@ -1,3 +1,4 @@
+"use client"
 import Link from "next/link"
 import { SubmitButton } from "./submit-button"
 import { signIn, signUp } from "./actions"
