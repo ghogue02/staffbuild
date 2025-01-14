@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [isSignIn, setIsSignIn] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -16,11 +16,18 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
       const formData = new FormData(e.currentTarget)
       const email = formData.get('email') as string
       const password = formData.get('password') as string
+
+      if (!email || !password) {
+        setError('Please fill in all fields')
+        setLoading(false)
+        return
+      }
 
       if (isSignIn) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -33,7 +40,7 @@ export default function LoginPage() {
           return
         }
 
-        router.replace('/')
+        router.push('/homepage')
       } else {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -52,67 +59,97 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError('An unexpected error occurred')
+      console.error('Auth error:', err)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center pt-16 sm:pt-24">
-      <div className="w-full max-w-sm">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-900">
+      <div className="w-full max-w-md px-8 py-12 bg-gray-800 rounded-lg shadow-xl">
+        <h1 className="text-3xl font-bold text-center text-white mb-8">
+          {isSignIn ? 'Sign In' : 'Create Account'}
+        </h1>
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-500/10 text-red-500 p-3 rounded-md text-sm">
+            <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-md text-sm">
               {error}
             </div>
           )}
+          
           {success && (
-            <div className="bg-green-500/10 text-green-500 p-3 rounded-md text-sm">
+            <div className="bg-green-500/10 border border-green-500 text-green-500 px-4 py-3 rounded-md text-sm">
               {success}
             </div>
           )}
+
           <div>
-            <label className="block text-lg text-white mb-2" htmlFor="email">
-              Email
+            <label 
+              className="block text-sm font-medium text-gray-200 mb-2" 
+              htmlFor="email"
+            >
+              Email Address
             </label>
             <input
               id="email"
               name="email"
               type="email"
+              autoComplete="email"
               required
-              className="w-full px-3 py-2 bg-white text-gray-900 rounded-md"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="you@example.com"
             />
           </div>
+
           <div>
-            <label className="block text-lg text-white mb-2" htmlFor="password">
+            <label 
+              className="block text-sm font-medium text-gray-200 mb-2" 
+              htmlFor="password"
+            >
               Password
             </label>
             <input
               id="password"
               name="password"
               type="password"
+              autoComplete={isSignIn ? "current-password" : "new-password"}
               required
-              className="w-full px-3 py-2 bg-white text-gray-900 rounded-md"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="••••••••"
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 px-4 rounded-md text-white text-lg font-medium transition ${
-              loading
-                ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            {loading ? (isSignIn ? 'Signing in...' : 'Signing up...') : isSignIn ? 'Sign In' : 'Sign Up'}
-          </button>
-          <div className="text-center">
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 px-4 rounded-md text-white text-base font-medium transition duration-200 ${
+                loading
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900'
+              }`}
+            >
+              {loading 
+                ? (isSignIn ? 'Signing in...' : 'Creating account...') 
+                : (isSignIn ? 'Sign In' : 'Create Account')}
+            </button>
+          </div>
+
+          <div className="text-center mt-4">
             <button
               type="button"
-              onClick={() => setIsSignIn(!isSignIn)}
-              className="text-white hover:underline"
+              onClick={() => {
+                setIsSignIn(!isSignIn)
+                setError(null)
+                setSuccess(null)
+              }}
+              className="text-sm text-gray-300 hover:text-white transition-colors"
             >
-              {isSignIn ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+              {isSignIn 
+                ? "Don't have an account? Sign up" 
+                : 'Already have an account? Sign in'}
             </button>
           </div>
         </form>

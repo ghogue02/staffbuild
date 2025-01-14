@@ -1,16 +1,12 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
 
 export async function savePhaseData(phase: string, formData: any) {
   const supabase = createClientComponentClient();
-  const router = useRouter();
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
 
   if (authError || !authData?.user) {
-    // Redirect to login if not authenticated
-    router.push('/login');
-    return;
+    throw new Error('You must be logged in to save data');
   }
 
   const { error: saveError } = await supabase
@@ -23,7 +19,7 @@ export async function savePhaseData(phase: string, formData: any) {
         updated_at: new Date().toISOString(),
       },
       {
-        onConflict: 'user_id,phase',
+        onConflict: 'user_id,phase'
       }
     );
 
