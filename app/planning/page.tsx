@@ -1,11 +1,12 @@
 'use client'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 import { savePhaseData } from '../../utils/savePhaseData'
 import { createClientComponentClient, Session } from '@supabase/auth-helpers-nextjs'
 import { PHASE_NAMES, PAGE_TITLES } from '../../utils/constants'
+import withAuth from '../../utils/withAuth';
 
-export default function PlanningPage({ session }: { session: Session | null }) {
+function PlanningPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,38 +17,55 @@ export default function PlanningPage({ session }: { session: Session | null }) {
     keyMilestones: '',
     learningGoals: ''
   });
-
+  const [session, setSession] = useState<Session | null>(null);
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    if (!session) {
-      router.push('/login');
-    } else {
-      fetchData();
+    const fetchSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
+    };
+
+    fetchSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from('workbook_responses')
+        .select('data')
+        .eq('phase', PHASE_NAMES.PLANNING)
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch existing data.');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setPlanningFormData(data[0].data);
+      } else {
+        console.log('No existing data found for this phase.');
+      }
     }
-  }, [router, session]);
 
-  async function fetchData() {
-    if (!session) return;
-
-    const { data, error } = await supabase
-      .from('workbook_responses')
-      .select('data')
-      .eq('phase', PHASE_NAMES.PLANNING)
-      .eq('user_id', session.user.id);
-
-    if (error) {
-      console.error('Error fetching data:', error);
-      setError('Failed to fetch existing data.');
-      return;
-    }
-
-    if (data && data.length > 0) {
-      setPlanningFormData(data[0].data);
-    } else {
-      console.log('No existing data found for this phase.');
-    }
-  }
+    fetchData();
+  }, [session, supabase]);
 
   const handleChange =
     (field: keyof typeof planningFormData) =>
@@ -177,3 +195,5 @@ export default function PlanningPage({ session }: { session: Session | null }) {
     </div>
   )
 }
+
+export default withAuth(PlanningPage);

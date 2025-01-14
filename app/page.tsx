@@ -1,31 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
+import withAuth from '@/utils/withAuth'
 
-export default function HomePage() {
-  const [sessionLoaded, setSessionLoaded] = useState(false);
-  const supabase = createClientComponentClient();
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setSessionLoaded(true);
-      } else {
-        router.push('/login');
-      }
-    };
-
-    checkSession();
-  }, [router, supabase]);
-
-  if (!sessionLoaded) {
-    return null;
-  }
+function HomePage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-black text-white">
@@ -77,3 +55,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+export default withAuth(HomePage);
